@@ -1,0 +1,9 @@
+#!/bin/bash
+# launcher: runs skaz.py inside its venv (works through symlinks)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  SOURCE="$(readlink "$SOURCE")"
+  case "$SOURCE" in /*) ;; *) SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$SOURCE" ;; esac
+done
+DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+exec "$DIR/.venv/bin/python" "$DIR/src/skaz.py" "$@"
