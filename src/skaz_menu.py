@@ -173,19 +173,19 @@ def _ask_name_dialog(default: str) -> str:
     save_btn.setKeyEquivalent_("\r")
     content.addSubview_(save_btn)
 
-    auto_btn = NSButton.alloc().initWithFrame_(
+    cancel_btn = NSButton.alloc().initWithFrame_(
         NSMakeRect(width - pad - btn_w - 8 - btn_w, btn_y, btn_w, btn_h)
     )
-    auto_btn.setTitle_("Auto")
-    auto_btn.setBezelStyle_(NSBezelStyleRounded)
-    auto_btn.setKeyEquivalent_("\x1b")
-    content.addSubview_(auto_btn)
+    cancel_btn.setTitle_("Cancel")
+    cancel_btn.setBezelStyle_(NSBezelStyleRounded)
+    cancel_btn.setKeyEquivalent_("\x1b")
+    content.addSubview_(cancel_btn)
 
     target = _NameDialogTarget.alloc().initWithApp_(NSApp)
     save_btn.setTarget_(target)
     save_btn.setAction_(b"save:")
-    auto_btn.setTarget_(target)
-    auto_btn.setAction_(b"cancel:")
+    cancel_btn.setTarget_(target)
+    cancel_btn.setAction_(b"cancel:")
 
     panel.center()
     panel.makeFirstResponder_(text_field)
@@ -201,7 +201,7 @@ def _ask_name_dialog(default: str) -> str:
         cleaned = "".join(c if (c.isalnum() or c in "-_ ") else "-" for c in typed.strip())
         cleaned = "-".join(cleaned.split())
         return cleaned or default
-    return default
+    return None  # cancel: caller should discard the session
 
 
 class HotkeyMonitor:
@@ -412,7 +412,15 @@ class SkazApp(rumps.App):
 
         # Ask for a name; prefill with the auto-generated timestamp.
         new_name = self._ask_name(s["name"])
-        if new_name and new_name != s["name"]:
+        if new_name is None:
+            # Cancel: discard the entire session — wav, screenshots, folder.
+            import shutil
+            shutil.rmtree(s["dir"], ignore_errors=True)
+            self._render_idle_menu()
+            self.session = None
+            self.title = TITLE_IDLE
+            return
+        if new_name != s["name"]:
             new_dir = skaz.config.sessions_dir() / new_name
             if not new_dir.exists():
                 s["dir"].rename(new_dir)
