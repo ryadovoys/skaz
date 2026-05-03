@@ -15,7 +15,7 @@ Everything stays on your Mac. Transcription is local via Parakeet TDT v3 multili
 skaz installs itself by handing the install instructions to Claude Code. No installer GUI, no manual config.
 
 ```bash
-git clone https://github.com/<you>/skaz
+git clone https://github.com/ryadovoys/skaz
 cd skaz
 claude
 ```
