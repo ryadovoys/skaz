@@ -65,7 +65,6 @@ Existing tools split the workflow: recording apps don't know about clipboard ima
 - [Parakeet TDT 0.6B v3](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3) by NVIDIA
 - [parakeet-mlx](https://github.com/senstella/parakeet-mlx) — Apple MLX port
 - [rumps](https://github.com/jaredks/rumps) — menu-bar plumbing
-- Inspired by [Relay](https://github.com/msllrs/relay)
 
 ## License
 
