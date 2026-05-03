@@ -68,6 +68,8 @@ README.md          — human-facing pitch
 
 - **Threading model:** AudioRecorder + ClipboardWatcher are daemon threads inside the Python process. Stop is via threading.Event. The menu's main loop is the Cocoa runloop. Transcription runs on a non-daemon background thread (so it survives the menu app being told to quit until done).
 
+- **Global hotkey via NSEvent monitor:** `HotkeyMonitor` listens for `NSEventMaskFlagsChanged` events across the whole system. On each modifier change it computes `flags & ALL_MODIFIER_MASK` and exact-matches against the configured set (so `cmd+opt+shift` won't fire a `cmd+opt` rule). Rising-edge trigger only — calls toggle once per chord press, not on release. Distinguishes left vs right modifiers via NX_DEVICELCMDKEYMASK / NX_DEVICERCMDKEYMASK device-specific bits in the low 16 bits of NSEvent.modifierFlags(). Requires Accessibility permission granted to the running app. Without it, menu bar still works.
+
 ## Common operations
 
 - Run a CLI session: `skaz <name>` (or `python src/skaz.py <name>`). Ctrl+C stops.

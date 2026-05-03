@@ -59,7 +59,7 @@ If Python is missing or older than 3.11:
 
 Briefly tell the user "Pre-flight passed. Now I need 4 quick things before I install."
 
-## Step 1 — Ask the user 4 questions
+## Step 1 — Ask the user 5 questions
 
 Use AskUserQuestion with these exact questions, one batch:
 
@@ -74,6 +74,10 @@ Use AskUserQuestion with these exact questions, one batch:
 4. **Install the Claude skill so I can read your sessions in conversation?**
    - Options: `Yes` / `No`
    - If yes, copies `skill/SKILL.md` into `~/.claude/skills/skaz/`. Recommended.
+5. **Set up a global hotkey to start/stop sessions?**
+   - Default: `Right Cmd + Right Option` (toggle — same combo starts and stops)
+   - Options: `Default (right cmd + right option)` / `No hotkey` / `Custom`
+   - If `Custom`, ask follow-up: which modifiers? Accept any combination of `left_cmd`, `right_cmd`, `left_option`, `right_option`, `left_shift`, `right_shift`, `left_control`, `right_control`. Modifier-only chord (no letter key).
 
 Save the answers — you'll need them in later steps.
 
@@ -93,14 +97,23 @@ Verify: `.venv/bin/python -c "import rumps, sounddevice, AppKit, parakeet_mlx; p
 
 ## Step 3 — Write config
 
-Create `~/.config/skaz/config.json` with the user's chosen sessions folder:
+Create `~/.config/skaz/config.json` with the user's chosen sessions folder and hotkey settings:
 
 ```json
 {
   "sessions_dir": "<absolute path from question 1, expanded>",
-  "model_id": "mlx-community/parakeet-tdt-0.6b-v3"
+  "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
+  "hotkey": {
+    "enabled": true,
+    "modifiers": ["right_cmd", "right_option"]
+  }
 }
 ```
+
+Apply user's answer from question 5:
+- `Default` → use `["right_cmd", "right_option"]` and `enabled: true`
+- `No hotkey` → set `enabled: false`, leave modifiers default (so user can flip later)
+- `Custom` → use the modifier names they listed
 
 Then create the sessions folder: `mkdir -p "<sessions_dir>"`.
 
@@ -182,9 +195,12 @@ If they don't see `S` → check `/tmp/skaz-menu.log` for errors. Common issues: 
 Tell the user:
 
 - Click `S` in menu bar → Start session, talk, screenshot, Stop, name it.
+- Or use the hotkey (default: hold `Right Cmd + Right Option`) — same combo toggles start and stop.
 - Sessions live in `<sessions_dir>`.
 - Stop a stuck session from terminal: `skaz stop`.
-- Re-run this install if you change config.
+- Re-run this install if you change config (or edit `~/.config/skaz/config.json` directly).
+
+**About the hotkey:** the first time the user presses it, macOS may show a dialog asking to grant **Accessibility** permission to skaz (System Settings → Privacy & Security → Accessibility). They need to allow it for the global hotkey to work. Without it, the menu bar still works fine.
 
 Suggest they try a 30-second test session right now to confirm the full pipeline works end-to-end.
 

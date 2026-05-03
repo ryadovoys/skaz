@@ -32,6 +32,8 @@ from AppKit import (  # noqa: E402
     NSBackingStoreBuffered,
     NSBezelStyleRounded,
     NSColor,
+    NSEvent,
+    NSEventMaskFlagsChanged,
     NSFont,
     NSPanel,
     NSScreen,
@@ -42,6 +44,37 @@ from AppKit import (  # noqa: E402
     NSWindowStyleMaskClosable,
     NSStatusWindowLevel,
 )
+
+# Device-specific modifier flag masks (low 16 bits of NSEvent.modifierFlags()).
+# These let us distinguish left-Cmd from right-Cmd, etc.
+NX_DEVICELCTLKEYMASK = 0x0001
+NX_DEVICELSHIFTKEYMASK = 0x0002
+NX_DEVICERSHIFTKEYMASK = 0x0004
+NX_DEVICELCMDKEYMASK = 0x0008
+NX_DEVICERCMDKEYMASK = 0x0010
+NX_DEVICELALTKEYMASK = 0x0020
+NX_DEVICERALTKEYMASK = 0x0040
+NX_DEVICERCTLKEYMASK = 0x2000
+ALL_MODIFIER_MASK = (
+    NX_DEVICELCMDKEYMASK | NX_DEVICERCMDKEYMASK
+    | NX_DEVICELALTKEYMASK | NX_DEVICERALTKEYMASK
+    | NX_DEVICELSHIFTKEYMASK | NX_DEVICERSHIFTKEYMASK
+    | NX_DEVICELCTLKEYMASK | NX_DEVICERCTLKEYMASK
+)
+MODIFIER_BY_NAME = {
+    "left_cmd": NX_DEVICELCMDKEYMASK,
+    "right_cmd": NX_DEVICERCMDKEYMASK,
+    "left_option": NX_DEVICELALTKEYMASK,
+    "right_option": NX_DEVICERALTKEYMASK,
+    "left_alt": NX_DEVICELALTKEYMASK,
+    "right_alt": NX_DEVICERALTKEYMASK,
+    "left_shift": NX_DEVICELSHIFTKEYMASK,
+    "right_shift": NX_DEVICERSHIFTKEYMASK,
+    "left_control": NX_DEVICELCTLKEYMASK,
+    "right_control": NX_DEVICERCTLKEYMASK,
+    "left_ctrl": NX_DEVICELCTLKEYMASK,
+    "right_ctrl": NX_DEVICERCTLKEYMASK,
+}
 from Foundation import (  # noqa: E402
     NSObject,
     NSRunLoop,
@@ -171,6 +204,52 @@ def _ask_name_dialog(default: str) -> str:
     return default
 
 
+class HotkeyMonitor:
+    """Global modifier-chord listener.
+
+    Triggers `callback` once on the rising edge when the configured
+    set of device-specific modifier flags is held simultaneously and
+    NO other modifiers are held. Uses NSEvent global monitor — fires
+    even when skaz isn't focused. Requires Accessibility permission;
+    macOS prompts on first install.
+    """
+
+    def __init__(self, modifier_names: list[str], callback) -> None:
+        self.callback = callback
+        mask = 0
+        for name in modifier_names:
+            m = MODIFIER_BY_NAME.get(name.lower())
+            if m is not None:
+                mask |= m
+        self.required_mask = mask
+        self.last_active = False
+        self._monitor = None
+
+    def start(self) -> None:
+        if self._monitor is not None or self.required_mask == 0:
+            return
+
+        def handler(event):
+            try:
+                flags = int(event.modifierFlags()) & ALL_MODIFIER_MASK
+                now_active = flags == self.required_mask
+                if now_active and not self.last_active:
+                    self.callback()
+                self.last_active = now_active
+            except Exception:
+                import traceback
+                traceback.print_exc()
+
+        self._monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
+            NSEventMaskFlagsChanged, handler
+        )
+
+    def stop(self) -> None:
+        if self._monitor is not None:
+            NSEvent.removeMonitor_(self._monitor)
+            self._monitor = None
+
+
 class LiveTimer:
     """NSTimer registered in NSRunLoopCommonModes so it keeps firing while a
     menu is open (default `rumps.Timer` is bound to NSDefaultRunLoopMode and
@@ -228,6 +307,15 @@ class SkazApp(rumps.App):
         self.control_timer = LiveTimer(lambda: self._poll_control(None), 1)
         self.control_timer.start()
 
+        # Global hotkey for toggle. Reads from config.
+        hk = skaz.config.hotkey()
+        self.hotkey_monitor: HotkeyMonitor | None = None
+        if hk.get("enabled", True):
+            self.hotkey_monitor = HotkeyMonitor(
+                hk.get("modifiers", []), self._toggle_via_hotkey
+            )
+            self.hotkey_monitor.start()
+
         self._render_idle_menu()
         PID_FILE.write_text(str(__import__("os").getpid()))
 
@@ -262,6 +350,14 @@ class SkazApp(rumps.App):
 
     def _stop_clicked(self, _) -> None:
         self._stop()
+
+    def _toggle_via_hotkey(self) -> None:
+        if self._transcribing:
+            return
+        if self.session is None:
+            self._start()
+        else:
+            self._stop()
 
     def _start(self) -> None:
         if self.session is not None:
@@ -427,6 +523,8 @@ class SkazApp(rumps.App):
     def _quit(self, _) -> None:
         if self.session:
             self._stop()
+        if self.hotkey_monitor:
+            self.hotkey_monitor.stop()
         try:
             PID_FILE.unlink()
         except FileNotFoundError:

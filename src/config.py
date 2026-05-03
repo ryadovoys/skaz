@@ -15,6 +15,7 @@ PID_FILE = CONFIG_DIR / "menu.pid"
 
 DEFAULT_SESSIONS_DIR = Path.home() / "Documents" / "skaz-sessions"
 DEFAULT_MODEL_ID = "mlx-community/parakeet-tdt-0.6b-v3"
+DEFAULT_HOTKEY = {"enabled": True, "modifiers": ["right_cmd", "right_option"]}
 SAMPLE_RATE = 16000
 
 
@@ -28,6 +29,7 @@ def load() -> dict:
         data = {}
     data.setdefault("sessions_dir", str(DEFAULT_SESSIONS_DIR))
     data.setdefault("model_id", DEFAULT_MODEL_ID)
+    data.setdefault("hotkey", DEFAULT_HOTKEY)
     return data
 
 
@@ -42,3 +44,7 @@ def sessions_dir() -> Path:
 
 def model_id() -> str:
     return load()["model_id"]
+
+
+def hotkey() -> dict:
+    return load().get("hotkey", DEFAULT_HOTKEY)
