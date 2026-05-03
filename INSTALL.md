@@ -137,6 +137,9 @@ rm "$TMP"
 /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'skaz records voice during dictation sessions'" SkazMenu.app/Contents/Info.plist 2>/dev/null \
   || /usr/libexec/PlistBuddy -c "Set :NSMicrophoneUsageDescription 'skaz records voice during dictation sessions'" SkazMenu.app/Contents/Info.plist
 
+# Brand icon (white square with slab S) — replaces the default AppleScript applet icon
+cp assets/icon.icns SkazMenu.app/Contents/Resources/applet.icns
+
 # Ad-hoc sign so macOS treats it as a valid local app
 codesign --force --deep --sign - SkazMenu.app
 ```

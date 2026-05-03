@@ -106,7 +106,8 @@ class _LiveTimerTarget(NSObject):
 
 
 class _NameDialogTarget(NSObject):
-    """Routes Save/Auto button clicks back to the modal runloop."""
+    """Routes name-dialog button clicks back to the modal runloop.
+    Response codes: 0=cancel, 1=save, 2=save+copy."""
 
     def initWithApp_(self, app):
         self = objc.super(_NameDialogTarget, self).init()
@@ -115,6 +116,9 @@ class _NameDialogTarget(NSObject):
         self._app = app
         return self
 
+    def saveCopy_(self, sender):
+        self._app.stopModalWithCode_(2)
+
     def save_(self, sender):
         self._app.stopModalWithCode_(1)
 
@@ -122,9 +126,14 @@ class _NameDialogTarget(NSObject):
         self._app.stopModalWithCode_(0)
 
 
-def _ask_name_dialog(default: str) -> str:
-    """Show a compact native name-input dialog. No icon, left-aligned content."""
-    width, height = 360, 130
+def _ask_name_dialog(default: str):
+    """Compact native name-input dialog with Save / Save & Copy / Cancel.
+
+    Returns:
+        (name, copy_to_clipboard) on Save or Save & Copy
+        None on Cancel (caller should discard the session)
+    """
+    width, height = 440, 130
     panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
         NSMakeRect(0, 0, width, height),
         NSWindowStyleMaskTitled | NSWindowStyleMaskClosable,
@@ -139,7 +148,6 @@ def _ask_name_dialog(default: str) -> str:
     pad = 18
     inner_w = width - 2 * pad
 
-    # "Name this session" label
     label = NSTextField.alloc().initWithFrame_(
         NSMakeRect(pad, height - pad - 18, inner_w, 18)
     )
@@ -153,7 +161,6 @@ def _ask_name_dialog(default: str) -> str:
     label.setTextColor_(NSColor.secondaryLabelColor())
     content.addSubview_(label)
 
-    # Text field with prefilled value
     field_h = 26
     field_y = height - pad - 18 - 8 - field_h
     text_field = NSTextField.alloc().initWithFrame_(
@@ -163,19 +170,31 @@ def _ask_name_dialog(default: str) -> str:
     text_field.setFont_(NSFont.systemFontOfSize_(13))
     content.addSubview_(text_field)
 
-    # Buttons (right-aligned, bottom)
-    btn_w, btn_h = 80, 26
+    btn_h = 26
     btn_y = 12
+    gap = 8
+    save_w, copy_w, cancel_w = 80, 110, 80
+
     save_btn = NSButton.alloc().initWithFrame_(
-        NSMakeRect(width - pad - btn_w, btn_y, btn_w, btn_h)
+        NSMakeRect(width - pad - save_w, btn_y, save_w, btn_h)
     )
     save_btn.setTitle_("Save")
     save_btn.setBezelStyle_(NSBezelStyleRounded)
     save_btn.setKeyEquivalent_("\r")
     content.addSubview_(save_btn)
 
+    copy_btn = NSButton.alloc().initWithFrame_(
+        NSMakeRect(width - pad - save_w - gap - copy_w, btn_y, copy_w, btn_h)
+    )
+    copy_btn.setTitle_("Save & Copy")
+    copy_btn.setBezelStyle_(NSBezelStyleRounded)
+    content.addSubview_(copy_btn)
+
     cancel_btn = NSButton.alloc().initWithFrame_(
-        NSMakeRect(width - pad - btn_w - 8 - btn_w, btn_y, btn_w, btn_h)
+        NSMakeRect(
+            width - pad - save_w - gap - copy_w - gap - cancel_w,
+            btn_y, cancel_w, btn_h,
+        )
     )
     cancel_btn.setTitle_("Cancel")
     cancel_btn.setBezelStyle_(NSBezelStyleRounded)
@@ -185,6 +204,8 @@ def _ask_name_dialog(default: str) -> str:
     target = _NameDialogTarget.alloc().initWithApp_(NSApp)
     save_btn.setTarget_(target)
     save_btn.setAction_(b"save:")
+    copy_btn.setTarget_(target)
+    copy_btn.setAction_(b"saveCopy:")
     cancel_btn.setTarget_(target)
     cancel_btn.setAction_(b"cancel:")
 
@@ -198,11 +219,12 @@ def _ask_name_dialog(default: str) -> str:
     typed = str(text_field.stringValue())
     panel.orderOut_(None)
 
-    if response == 1:
-        cleaned = "".join(c if (c.isalnum() or c in "-_ ") else "-" for c in typed.strip())
-        cleaned = "-".join(cleaned.split())
-        return cleaned or default
-    return None  # cancel: caller should discard the session
+    if response == 0:
+        return None
+    cleaned = "".join(c if (c.isalnum() or c in "-_ ") else "-" for c in typed.strip())
+    cleaned = "-".join(cleaned.split())
+    name = cleaned or default
+    return (name, response == 2)
 
 
 class HotkeyMonitor:
@@ -440,8 +462,8 @@ class SkazApp(rumps.App):
             self.tick_timer = None
 
         # Ask for a name; prefill with the auto-generated timestamp.
-        new_name = self._ask_name(s["name"])
-        if new_name is None:
+        result = self._ask_name(s["name"])
+        if result is None:
             # Cancel: discard the entire session — wav, screenshots, folder.
             import shutil
             shutil.rmtree(s["dir"], ignore_errors=True)
@@ -449,6 +471,7 @@ class SkazApp(rumps.App):
             self.session = None
             self.title = TITLE_IDLE
             return
+        new_name, copy_to_clipboard = result
         if new_name != s["name"]:
             new_dir = skaz.config.sessions_dir() / new_name
             if not new_dir.exists():
@@ -467,7 +490,9 @@ class SkazApp(rumps.App):
         self.spinner_timer.start()
 
         threading.Thread(
-            target=self._finalize, args=(s, duration), daemon=False
+            target=self._finalize,
+            args=(s, duration, copy_to_clipboard),
+            daemon=False,
         ).start()
 
     def _spinner_tick(self) -> None:
@@ -483,7 +508,7 @@ class SkazApp(rumps.App):
     def _ask_name(self, default: str) -> str:
         return _ask_name_dialog(default)
 
-    def _finalize(self, s: dict, duration: float) -> None:
+    def _finalize(self, s: dict, duration: float, copy_to_clipboard: bool = False) -> None:
         try:
             if not s["wav"].exists() or s["wav"].stat().st_size < 1024:
                 rumps.notification("skaz", "no audio captured", s["name"])
@@ -512,10 +537,19 @@ class SkazApp(rumps.App):
                         f"[{skaz.fmt(sent.start)} → {skaz.fmt(sent.end)}] {sent.text.strip()}\n"
                     )
 
+            if copy_to_clipboard:
+                from AppKit import NSPasteboard, NSPasteboardTypeString
+                pb = NSPasteboard.generalPasteboard()
+                pb.clearContents()
+                pb.setString_forType_(notes.read_text(), NSPasteboardTypeString)
+
+            subtitle = f"{skaz.fmt(duration)} · {len(s['cw'].timeline)} shots"
+            if copy_to_clipboard:
+                subtitle += " · copied"
             rumps.notification(
                 "skaz",
                 f"{s['name']} ready",
-                f"{skaz.fmt(duration)} · {len(s['cw'].timeline)} shots",
+                subtitle,
                 sound=True,
             )
         except Exception as e:

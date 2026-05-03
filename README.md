@@ -1,3 +1,5 @@
+<img src="assets/logo-mark.png" alt="skaz" width="96" height="96">
+
 # skaz
 
 Local voice + clipboard screenshots → merged Markdown. Built for designers narrating over a screen who want a transcript with screenshots inlined at the moments they were taken — ready to drop into Claude (or any LLM) as case-study material.
