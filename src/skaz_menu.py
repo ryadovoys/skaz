@@ -34,6 +34,7 @@ from AppKit import (  # noqa: E402
     NSColor,
     NSEvent,
     NSEventMaskFlagsChanged,
+    NSEventMaskKeyDown,
     NSFont,
     NSPanel,
     NSScreen,
@@ -205,17 +206,27 @@ def _ask_name_dialog(default: str) -> str:
 
 
 class HotkeyMonitor:
-    """Global modifier-chord listener.
+    """Global hotkey listener.
 
-    Triggers `callback` once on the rising edge when the configured
-    set of device-specific modifier flags is held simultaneously and
-    NO other modifiers are held. Uses NSEvent global monitor — fires
-    even when skaz isn't focused. Requires Accessibility permission;
-    macOS prompts on first install.
+    Two modes:
+    - Modifier-only chord (key_code=None): rising-edge of exact modifier mask.
+    - Modifier + key chord (key_code set): keyDown of that virtual key code
+      while the modifier mask is exactly held.
+
+    Note: NSEvent global monitor observes events but doesn't consume them.
+    If the chord produces a character (e.g. Right Option + / inserts ÷ on
+    US keyboards), the character still appears in whatever has focus. For
+    consume-able hotkeys, switch to CGEventTap (more setup, more permissions).
     """
 
-    def __init__(self, modifier_names: list[str], callback) -> None:
+    def __init__(
+        self,
+        modifier_names: list[str],
+        callback,
+        key_code: int | None = None,
+    ) -> None:
         self.callback = callback
+        self.key_code = key_code
         mask = 0
         for name in modifier_names:
             m = MODIFIER_BY_NAME.get(name.lower())
@@ -229,20 +240,36 @@ class HotkeyMonitor:
         if self._monitor is not None or self.required_mask == 0:
             return
 
-        def handler(event):
-            try:
-                flags = int(event.modifierFlags()) & ALL_MODIFIER_MASK
-                now_active = flags == self.required_mask
-                if now_active and not self.last_active:
-                    self.callback()
-                self.last_active = now_active
-            except Exception:
-                import traceback
-                traceback.print_exc()
+        if self.key_code is None:
+            def handler(event):
+                try:
+                    flags = int(event.modifierFlags()) & ALL_MODIFIER_MASK
+                    now_active = flags == self.required_mask
+                    if now_active and not self.last_active:
+                        self.callback()
+                    self.last_active = now_active
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
 
-        self._monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
-            NSEventMaskFlagsChanged, handler
-        )
+            self._monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
+                NSEventMaskFlagsChanged, handler
+            )
+        else:
+            def handler(event):
+                try:
+                    if int(event.keyCode()) != self.key_code:
+                        return
+                    flags = int(event.modifierFlags()) & ALL_MODIFIER_MASK
+                    if flags == self.required_mask:
+                        self.callback()
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
+
+            self._monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
+                NSEventMaskKeyDown, handler
+            )
 
     def stop(self) -> None:
         if self._monitor is not None:
@@ -312,7 +339,9 @@ class SkazApp(rumps.App):
         self.hotkey_monitor: HotkeyMonitor | None = None
         if hk.get("enabled", True):
             self.hotkey_monitor = HotkeyMonitor(
-                hk.get("modifiers", []), self._toggle_via_hotkey
+                hk.get("modifiers", []),
+                self._toggle_via_hotkey,
+                key_code=hk.get("key_code"),
             )
             self.hotkey_monitor.start()
 

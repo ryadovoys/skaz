@@ -75,9 +75,9 @@ Use AskUserQuestion with these exact questions, one batch:
    - Options: `Yes` / `No`
    - If yes, copies `skill/SKILL.md` into `~/.claude/skills/skaz/`. Recommended.
 5. **Set up a global hotkey to start/stop sessions?**
-   - Default: `Right Cmd + Right Option` (toggle — same combo starts and stops)
-   - Options: `Default (right cmd + right option)` / `No hotkey` / `Custom`
-   - If `Custom`, ask follow-up: which modifiers? Accept any combination of `left_cmd`, `right_cmd`, `left_option`, `right_option`, `left_shift`, `right_shift`, `left_control`, `right_control`. Modifier-only chord (no letter key).
+   - Default: `Right Option + /` (toggle — same combo starts and stops)
+   - Options: `Default (right option + /)` / `No hotkey` / `Custom`
+   - If `Custom`, ask: which modifiers (combination of `left_cmd`, `right_cmd`, `left_option`, `right_option`, `left_shift`, `right_shift`, `left_control`, `right_control`) and which key (US virtual key code, or `none` for modifier-only chord). For modifier-only, leave `key_code: null` in config.
 
 Save the answers — you'll need them in later steps.
 
@@ -105,7 +105,8 @@ Create `~/.config/skaz/config.json` with the user's chosen sessions folder and h
   "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
   "hotkey": {
     "enabled": true,
-    "modifiers": ["right_cmd", "right_option"]
+    "modifiers": ["right_option"],
+    "key_code": 44
   }
 }
 ```
@@ -195,7 +196,7 @@ If they don't see `S` → check `/tmp/skaz-menu.log` for errors. Common issues: 
 Tell the user:
 
 - Click `S` in menu bar → Start session, talk, screenshot, Stop, name it.
-- Or use the hotkey (default: hold `Right Cmd + Right Option`) — same combo toggles start and stop.
+- Or use the hotkey (default: `Right Option + /`) — same combo toggles start and stop.
 - Sessions live in `<sessions_dir>`.
 - Stop a stuck session from terminal: `skaz stop`.
 - Re-run this install if you change config (or edit `~/.config/skaz/config.json` directly).

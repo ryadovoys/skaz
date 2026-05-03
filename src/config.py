@@ -15,7 +15,11 @@ PID_FILE = CONFIG_DIR / "menu.pid"
 
 DEFAULT_SESSIONS_DIR = Path.home() / "Documents" / "skaz-sessions"
 DEFAULT_MODEL_ID = "mlx-community/parakeet-tdt-0.6b-v3"
-DEFAULT_HOTKEY = {"enabled": True, "modifiers": ["right_cmd", "right_option"]}
+DEFAULT_HOTKEY = {
+    "enabled": True,
+    "modifiers": ["right_option"],
+    "key_code": 44,  # "/" on US keyboard
+}
 SAMPLE_RATE = 16000
 
 
