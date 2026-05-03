@@ -4,14 +4,60 @@ You are installing skaz on the user's Mac. Follow these steps in order. Use AskU
 
 ## Pre-flight checks
 
-Before asking the user anything, verify:
+Before asking the user the install questions, verify their machine has the basics. Don't just bail when something is missing — help them get it.
 
-1. macOS (Darwin). If not Mac → stop, tell user "skaz is macOS-only".
-2. Python 3.11+ available. Check with `python3 --version`. If older → tell user to install Python 3.11+ via Homebrew or python.org and stop.
-3. Xcode Command Line Tools present. Check with `xcode-select -p`. If missing → tell user to run `xcode-select --install` and stop.
-4. No existing skaz menu app running. Check with `pgrep -f skaz_menu`. If running → ask user if they want to kill it and continue, or abort.
+### 1. macOS
 
-If all checks pass, briefly confirm to the user that you're proceeding.
+`uname` must be `Darwin`. If not Mac → stop, tell user "skaz is macOS-only".
+
+### 2. Apple Silicon
+
+`uname -m` should be `arm64`. If `x86_64` (Intel Mac) → stop, tell user that Parakeet via MLX requires Apple Silicon (M1+). No fallback exists in skaz today.
+
+### 3. Xcode Command Line Tools
+
+`xcode-select -p` should return a path. If it returns an error:
+- Run `xcode-select --install`. This opens a GUI installer dialog.
+- Tell the user "macOS opened a dialog — click Install and accept the license. Tell me when it finishes (~5 minutes), then I'll continue."
+- Wait for user confirmation before proceeding.
+
+### 4. Homebrew (only if we'll need to install Python)
+
+Skip this step if Python 3.11+ is already present (check with `python3 --version`).
+
+If we'll need Homebrew to install Python:
+- `command -v brew` — if exists, good.
+- If missing, ask the user: "You don't have Homebrew installed. It's the standard macOS package manager and we need it to install Python. Install it now? (Yes/No)". 
+- If yes, run:
+  ```bash
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+  This is interactive — Homebrew prompts for sudo password and shows progress. Tell user "Homebrew installer is running — enter your password when prompted, watch for the 'Installation successful' message."
+- After install, source the brew shellenv so `brew` is on PATH for this session: `eval "$(/opt/homebrew/bin/brew shellenv)"`.
+- If user declines Homebrew → stop. They can install Python manually from python.org and re-run.
+
+### 5. Python 3.11+
+
+Check `python3 --version`. Acceptable: 3.11, 3.12, 3.13, 3.14.
+
+If Python is missing or older than 3.11:
+- Ask user: "You need Python 3.11+. Install Python 3.13 via Homebrew now? (Yes/No)"
+- If yes:
+  ```bash
+  brew install python@3.13
+  ```
+  After install, the binary is at `/opt/homebrew/bin/python3.13`. Use that explicitly in subsequent venv steps (replace `python3` with `python3.13` in Step 2).
+- If no → stop, user can install manually.
+
+### 6. No existing skaz session running
+
+`pgrep -f skaz_menu` should return nothing. If a skaz menu app is already running:
+- Ask user: "skaz menu app is already running (PID X). Quit it and continue, or abort?".
+- If continue → run `pkill -f skaz_menu` then proceed.
+
+### 7. Confirm and proceed
+
+Briefly tell the user "Pre-flight passed. Now I need 4 quick things before I install."
 
 ## Step 1 — Ask the user 4 questions
 
@@ -144,7 +190,7 @@ Suggest they try a 30-second test session right now to confirm the full pipeline
 
 ## Troubleshooting (if any step fails)
 
-- **`pip install` fails on numba/llvmlite**: user has Python 3.14 but llvmlite hasn't released wheel yet. Have them retry on Python 3.13.
+- **`pip install` fails on numba/llvmlite**: usually means a too-new Python with no wheels yet. Retry on a stable LTS like 3.13.
 - **`open SkazMenu.app` shows Python rocket in Dock**: re-run codesign step. If still wrong, the LSUIElement key wasn't added — re-run PlistBuddy line.
 - **Mic permission silently denied**: the .app's Info.plist must have `NSMicrophoneUsageDescription`. Re-run that step.
 - **`skaz` command not found**: the symlink is in `~/.local/bin/`, but PATH may not include it. Tell user to add `export PATH="$HOME/.local/bin:$PATH"` to their shell config.

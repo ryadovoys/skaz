@@ -71,4 +71,4 @@ Existing tools split the workflow: recording apps don't know about clipboard ima
 
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE).

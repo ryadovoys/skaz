@@ -140,7 +140,7 @@ def _send_control(cmd: str) -> None:
 
 
 def _print_help() -> None:
-    print("""skaz — voice + clipboard screenshots → merged Markdown
+    print(f"""skaz — voice + clipboard screenshots → merged Markdown
 
 CLI mode (records in this terminal):
   skaz <name>              start a session named <name>
@@ -153,7 +153,8 @@ Menu bar app control:
   skaz stop                tell the menu app to stop and transcribe
   skaz quit                tell the menu app to quit
 
-Sessions land in ~/Projects/raw/skaz-sessions/
+Sessions land in {config.sessions_dir()}
+Config:        {config.CONFIG_FILE}
 """)
 
 
