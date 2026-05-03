@@ -75,9 +75,9 @@ Use AskUserQuestion with these exact questions, one batch:
    - Options: `Yes` / `No`
    - If yes, copies `skill/SKILL.md` into `~/.claude/skills/skaz/`. Recommended.
 5. **Set up a global hotkey to start/stop sessions?**
-   - Default: `Right Option + /` (toggle — same combo starts and stops)
-   - Options: `Default (right option + /)` / `No hotkey` / `Custom`
-   - If `Custom`, ask: which modifiers (combination of `left_cmd`, `right_cmd`, `left_option`, `right_option`, `left_shift`, `right_shift`, `left_control`, `right_control`) and which key (US virtual key code, or `none` for modifier-only chord). For modifier-only, leave `key_code: null` in config.
+   - Default: `Right Option + Right Shift` (modifier-only chord — no character output, no system conflict)
+   - Options: `Default (right opt + right shift)` / `No hotkey` / `Custom`
+   - If `Custom`, ask: which modifiers (combination of `left_cmd`, `right_cmd`, `left_option`, `right_option`, `left_shift`, `right_shift`, `left_control`, `right_control`) and optionally a key (US virtual key code, or leave null for modifier-only chord).
 
 Save the answers — you'll need them in later steps.
 
@@ -105,8 +105,8 @@ Create `~/.config/skaz/config.json` with the user's chosen sessions folder and h
   "model_id": "mlx-community/parakeet-tdt-0.6b-v3",
   "hotkey": {
     "enabled": true,
-    "modifiers": ["right_option"],
-    "key_code": 44
+    "modifiers": ["right_option", "right_shift"],
+    "key_code": null
   }
 }
 ```
@@ -196,7 +196,7 @@ If they don't see `S` → check `/tmp/skaz-menu.log` for errors. Common issues: 
 Tell the user:
 
 - Click `S` in menu bar → Start session, talk, screenshot, Stop, name it.
-- Or use the hotkey (default: `Right Option + /`) — same combo toggles start and stop.
+- Or use the hotkey (default: `Right Option + Right Shift`) — same combo toggles start and stop.
 - Sessions live in `<sessions_dir>`.
 - Stop a stuck session from terminal: `skaz stop`.
 - Re-run this install if you change config (or edit `~/.config/skaz/config.json` directly).

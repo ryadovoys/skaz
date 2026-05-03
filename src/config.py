@@ -17,8 +17,8 @@ DEFAULT_SESSIONS_DIR = Path.home() / "Documents" / "skaz-sessions"
 DEFAULT_MODEL_ID = "mlx-community/parakeet-tdt-0.6b-v3"
 DEFAULT_HOTKEY = {
     "enabled": True,
-    "modifiers": ["right_option"],
-    "key_code": 44,  # "/" on US keyboard
+    "modifiers": ["right_option", "right_shift"],
+    "key_code": None,  # modifier-only chord (no character output)
 }
 SAMPLE_RATE = 16000
 
