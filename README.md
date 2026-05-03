@@ -22,7 +22,7 @@ claude
 
 Then in Claude Code, say: **"install this"**
 
-Claude reads `INSTALL.md`, asks 3 questions (where to save sessions, download model now or later, auto-start at login), runs the install, verifies. After that, skaz is a normal Mac menu-bar app — you don't need Claude in the loop to use it.
+Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey), runs the install, verifies. After that, skaz is a normal Mac menu-bar app — you don't need Claude in the loop to use it.
 
 ## Use
 
