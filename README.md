@@ -1,7 +1,5 @@
 # skaz
 
-> сказ — то что было рассказано и показано
-
 Local voice + clipboard screenshots → merged Markdown. Built for designers narrating over a screen who want a transcript with screenshots inlined at the moments they were taken — ready to drop into Claude (or any LLM) as case-study material.
 
 ```
