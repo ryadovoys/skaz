@@ -322,11 +322,21 @@ class LiveTimer:
             self._timer.invalidate()
             self._timer = None
 
-TITLE_IDLE = "S"
-TITLE_RECORDING = "●"
-TITLE_TRANSCRIBING = "…"
 SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 SPINNER_INTERVAL = 0.1
+
+
+def _find_menu_bar_assets() -> Path:
+    here = Path(__file__).resolve().parent
+    for candidate in [here / "assets" / "menu-bar", here.parent / "assets" / "menu-bar"]:
+        if candidate.exists():
+            return candidate
+    return here / "assets" / "menu-bar"
+
+
+MENU_BAR_DIR = _find_menu_bar_assets()
+ICON_IDLE = str(MENU_BAR_DIR / "idle.png")
+ICON_RECORDING = str(MENU_BAR_DIR / "recording.png")
 
 CONTROL_FILE = skaz.CONTROL_FILE
 PID_FILE = skaz.PID_FILE
@@ -334,7 +344,7 @@ PID_FILE = skaz.PID_FILE
 
 class SkazApp(rumps.App):
     def __init__(self) -> None:
-        super().__init__(TITLE_IDLE, quit_button=None)
+        super().__init__("", quit_button=None, icon=ICON_IDLE, template=True)
 
         self.start_item = rumps.MenuItem("Start session", callback=self._start_clicked)
         self.elapsed_item = rumps.MenuItem("")
@@ -436,7 +446,8 @@ class SkazApp(rumps.App):
             "ar": ar,
         }
 
-        self.title = TITLE_RECORDING
+        self.icon = ICON_RECORDING
+        self.title = ""
         self._render_recording_menu()
         self.tick_timer = LiveTimer(lambda: self._tick(None), 1)
         self.tick_timer.start()
@@ -469,7 +480,8 @@ class SkazApp(rumps.App):
             shutil.rmtree(s["dir"], ignore_errors=True)
             self._render_idle_menu()
             self.session = None
-            self.title = TITLE_IDLE
+            self.icon = ICON_IDLE
+            self.title = ""
             return
         new_name, copy_to_clipboard = result
         if new_name != s["name"]:
@@ -483,7 +495,8 @@ class SkazApp(rumps.App):
         self._render_idle_menu()
         self.session = None
 
-        # Start spinner; runs on main thread, watches `_transcribing` flag
+        # Drop the icon during transcription; spinner text takes over.
+        self.icon = None
         self._transcribing = True
         self._spinner_idx = 0
         self.spinner_timer = LiveTimer(self._spinner_tick, SPINNER_INTERVAL)
@@ -497,7 +510,8 @@ class SkazApp(rumps.App):
 
     def _spinner_tick(self) -> None:
         if not self._transcribing:
-            self.title = TITLE_IDLE
+            self.title = ""
+            self.icon = ICON_IDLE
             if self.spinner_timer:
                 self.spinner_timer.stop()
                 self.spinner_timer = None
