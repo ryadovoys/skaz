@@ -48,7 +48,7 @@ breathing room around the headline was much more generous.
 
 ## Install (via Claude Code)
 
-<img src="assets/20260503-214645-install-flow-waveform-v1.png" alt="Skaz install flow: clone → 'install this' in Claude Code → 5 setup questions → install runs (venv, model, menu app, hotkey) → menu-bar S ready" width="100%">
+<img src="assets/20260503-215633-install-flow-storyboard-v2-fourstep.png" alt="Skaz install flow: clone the repo → run claude in the folder → answer setup questions → done, S in the menu bar" width="100%">
 
 Skaz installs itself by handing the install instructions to Claude Code. No installer GUI, no manual config.
 
