@@ -1,16 +1,50 @@
-<img src="assets/logo-mark.png" alt="skaz" width="96" height="96">
-
 # skaz
 
-Local voice + clipboard screenshots → merged Markdown. Built for designers narrating over a screen who want a transcript with screenshots inlined at the moments they were taken — ready to drop into Claude (or any LLM) as case-study material.
+> Voice and clipboard screenshots, merged into one Markdown.
+
+<img src="assets/skaz-logo-post.jpg" alt="skaz menu in macOS menu bar" width="100%">
+
+Records your voice while you narrate something on screen, captures every screenshot you take into the clipboard, and merges them into a single Markdown file with each screenshot placed at the moment it was taken. Everything stays on your Mac — transcription runs locally via Parakeet TDT v3 multilingual (~25 European languages including English, Russian, German, Spanish, etc.).
+
+## How it works
+
+<img src="assets/workflow-diagram.png" alt="skaz workflow: voice waveform with screenshots placed at moments in time, merged into notes.md" width="100%">
+
+You speak. The mic records mono 16 kHz audio. Every time you press `cmd+ctrl+shift+4` or use CleanShot or anything else that puts an image in your clipboard, skaz catches it and tags it with the current timestamp. When you stop, the wav runs through Parakeet locally, the sentences come back with start and end times, and screenshots are woven into the transcript at the moments they happened.
+
+The output is one folder per session:
 
 ```
-You speak    → 🎙 audio.wav (16 kHz mono)
-You screenshot → 📋 clipboard image → screenshots/01_00-12.png
-You stop     → notes.md with transcript and screenshots interleaved by timestamp
+~/Documents/skaz-sessions/<name>/
+├── notes.md           # transcript with screenshots placed by time
+├── transcript.txt     # raw transcript with [start → end] timecodes
+├── audio.wav          # the original recording
+└── screenshots/
+    ├── 01_00-12.png
+    ├── 02_00-45.png
+    └── 03_01-08.png
 ```
 
-Everything stays on your Mac. Transcription is local via Parakeet TDT v3 multilingual (~25 European languages including English, Russian, German, Spanish, etc.).
+`notes.md` looks like:
+
+```markdown
+# homepage-review
+
+Recorded: 2026-05-03T14:22:00
+Duration: 03:47
+Screenshots: 3
+
+---
+
+**[00:00]** I'm looking at the current homepage. The spacing on the
+hero feels too tight. The CTA is fighting with the headline.
+
+![01_00-12.png](/abs/path/to/screenshots/01_00-12.png)
+*screenshot at 00:12*
+
+**[00:18]** This is the old version we shipped last month. The
+breathing room around the headline was much more generous.
+```
 
 ## Install (via Claude Code)
 
@@ -24,18 +58,18 @@ claude
 
 Then in Claude Code, say: **"install this"**
 
-Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey), runs the install, verifies. After that, skaz is a normal Mac menu-bar app — you don't need Claude in the loop to use it.
+Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey, optional companion skill), runs the install, verifies. After that, skaz is a normal Mac menu-bar app — Claude is no longer in the loop.
 
 ## Use
 
-Click `S` in your menu bar:
+Click `S` in your menu bar — or hold the global hotkey (default `Right Option + Right Shift`):
 
-- **Start session** → recording begins
-- Talk while looking at the screen. Cmd+Ctrl+Shift+4 (or CleanShot, or anything) to grab screenshots into clipboard.
-- **Stop session** → name it (or hit Enter to keep auto-name) → wait for transcription
+- **Start session** → recording begins, the icon flips from a square to a circle
+- Talk while looking at the screen. Screenshot anything you want anchored to the timeline.
+- **Stop session** → name the session (or hit Enter to keep auto-name) → wait for transcription
 - Notification → click "Open last session" to read the result
 
-Each session lives in its own folder with `notes.md`, `audio.wav`, `transcript.txt`, and `screenshots/`. Drag `notes.md` into a Claude conversation and you have rich case-study material with images woven in by time.
+Each session is its own folder. Drag `notes.md` into a Claude conversation and you have rich case-study material with images woven in by time.
 
 Stop a stuck session from the terminal:
 
@@ -43,24 +77,27 @@ Stop a stuck session from the terminal:
 skaz stop
 ```
 
+## What you can do with the output
+
+1. **Build case studies.** Talk through a project naturally, screenshot anything you want to show. Drop the result into Claude and ask for a case study — the LLM has both the story and the visuals as context, can write the page and place the images.
+2. **Capture feedback.** Walk through a design, comment on what catches you, screenshot the moments you want flagged. Export as a deck or send the whole folder.
+3. **Give an LLM rich context.** Text alone is a thin slice. Text + visuals anchored by time is a much fuller picture of what you were thinking.
+
 ## Requirements
 
 - Apple Silicon Mac (M1+)
 - macOS 14+
 - Python 3.11–3.13
 - Microphone permission (granted on first session)
+- Accessibility permission (only if you use the global hotkey)
 - Claude Code for the install step — [download](https://claude.com/claude-code)
 
 ## What it doesn't do
 
 - No cloud sync (sessions are local files)
-- No video / screen recording — clipboard images only
+- No video or screen recording — clipboard images only
 - No multi-speaker diarization (single-mic dictation only)
-- No in-app transcript editor — open notes.md in your editor
-
-## Why
-
-Existing tools split the workflow: recording apps don't know about clipboard images, screenshot tools don't know about voice timing, transcription apps don't merge with anything. skaz does only the bridge: time-anchored voice + visual evidence → one document. After that, your editor or your LLM does the rest.
+- No in-app transcript editor — open `notes.md` in your editor
 
 ## Acknowledgments
 
