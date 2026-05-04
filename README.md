@@ -8,7 +8,7 @@ Records your voice while you narrate something on screen, captures every screens
 
 ## How it works
 
-<img src="assets/workflow-diagram-storybook.png" alt="Skaz workflow as a fairy-tale illustration: voice flows from a speaking horn, picks up framed moments along the way, ends in an open book of words and pictures" width="100%">
+<img src="assets/workflow-storybook.png" alt="Skaz workflow as a fairy-tale illustration: voice flows from a speaking horn, picks up framed moments along the way, ends in an open book of words and pictures" width="100%">
 
 You speak. The mic records mono 16 kHz audio. Every time you press `cmd+ctrl+shift+4` or use CleanShot or anything else that puts an image in your clipboard, Skaz catches it and tags it with the current timestamp. When you stop, the wav runs through Parakeet locally, the sentences come back with start and end times, and screenshots are woven into the transcript at the moments they happened.
 
