@@ -8,8 +8,6 @@ Records your voice while you narrate something on screen, captures every screens
 
 ## How it works
 
-<img src="assets/workflow-organic-v4-cropped-style.png" alt="Skaz workflow as a geometric infographic: voice on the left, three screenshot moments along a timeline in the middle, merged Markdown document on the right" width="100%">
-
 You speak. The mic records mono 16 kHz audio. Every time you press `cmd+ctrl+shift+4` or use CleanShot or anything else that puts an image in your clipboard, Skaz catches it and tags it with the current timestamp. When you stop, the wav runs through Parakeet locally, the sentences come back with start and end times, and screenshots are woven into the transcript at the moments they happened.
 
 The output is one folder per session:
@@ -47,8 +45,6 @@ breathing room around the headline was much more generous.
 ```
 
 ## Install (via Claude Code)
-
-<img src="assets/20260503-215633-install-flow-storyboard-v2-fourstep.png" alt="Skaz install flow: clone the repo → run claude in the folder → answer setup questions → done, S in the menu bar" width="100%">
 
 Skaz installs itself by handing the install instructions to Claude Code. No installer GUI, no manual config.
 
