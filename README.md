@@ -1,16 +1,16 @@
-# skaz
+# Skaz
 
 > Voice and clipboard screenshots, merged into one Markdown.
 
-<img src="assets/skaz-logo-post.jpg" alt="skaz menu in macOS menu bar" width="100%">
+<img src="assets/skaz-logo-post.jpg" alt="Skaz menu in macOS menu bar" width="100%">
 
 Records your voice while you narrate something on screen, captures every screenshot you take into the clipboard, and merges them into a single Markdown file with each screenshot placed at the moment it was taken. Everything stays on your Mac — transcription runs locally via Parakeet TDT v3 multilingual (~25 European languages including English, Russian, German, Spanish, etc.).
 
 ## How it works
 
-<img src="assets/workflow-diagram.png" alt="skaz workflow: voice waveform with screenshots placed at moments in time, merged into notes.md" width="100%">
+<img src="assets/workflow-diagram.png" alt="Skaz workflow: voice waveform with screenshots placed at moments in time, merged into notes.md" width="100%">
 
-You speak. The mic records mono 16 kHz audio. Every time you press `cmd+ctrl+shift+4` or use CleanShot or anything else that puts an image in your clipboard, skaz catches it and tags it with the current timestamp. When you stop, the wav runs through Parakeet locally, the sentences come back with start and end times, and screenshots are woven into the transcript at the moments they happened.
+You speak. The mic records mono 16 kHz audio. Every time you press `cmd+ctrl+shift+4` or use CleanShot or anything else that puts an image in your clipboard, Skaz catches it and tags it with the current timestamp. When you stop, the wav runs through Parakeet locally, the sentences come back with start and end times, and screenshots are woven into the transcript at the moments they happened.
 
 The output is one folder per session:
 
@@ -48,7 +48,7 @@ breathing room around the headline was much more generous.
 
 ## Install (via Claude Code)
 
-skaz installs itself by handing the install instructions to Claude Code. No installer GUI, no manual config.
+Skaz installs itself by handing the install instructions to Claude Code. No installer GUI, no manual config.
 
 ```bash
 git clone https://github.com/ryadovoys/skaz
@@ -58,7 +58,7 @@ claude
 
 Then in Claude Code, say: **"install this"**
 
-Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey, optional companion skill), runs the install, verifies. After that, skaz is a normal Mac menu-bar app — Claude is no longer in the loop.
+Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey, optional companion skill), runs the install, verifies. After that, Skaz is a normal Mac menu-bar app — Claude is no longer in the loop.
 
 ## Use
 
