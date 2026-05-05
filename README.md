@@ -54,7 +54,7 @@ cd skaz
 claude
 ```
 
-Then in Claude Code, say: **"install this"**
+Then in Claude Code, say: **"install skaz"**
 
 Claude reads `INSTALL.md`, asks a few setup questions (where to save sessions, download the model now or later, auto-start at login, hotkey, optional companion skill), runs the install, verifies. After that, Skaz is a normal Mac menu-bar app — Claude is no longer in the loop.
 
